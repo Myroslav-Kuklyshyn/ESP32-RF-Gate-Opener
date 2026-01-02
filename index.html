@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Контролер Ворота | Firebase IoT</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f4f7f6;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        .status-box {
+            background-color: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .status-text {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #7f8c8d;
+        }
+        #currentStatus {
+            color: #3498db;
+            margin-top: 5px;
+            display: block;
+        }
+        .btn {
+            background-color: #2ecc71;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1em;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .btn:hover {
+            background-color: #27ae60;
+        }
+        .btn:active {
+            transform: scale(0.98);
+        }
+        #message {
+            margin-top: 15px;
+            color: #e74c3c;
+            font-size: 0.9em;
+        }
+    </style>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Керування Воротами</h1>
+        
+    
+
+        <button class="btn" onclick="sendGateCommand()">
+            ВІДПРАВИТИ СИГНАЛ (1)
+        </button>
+
+        <p id="message"></p>
+    </div>
+
+    <script>
+
+        const firebaseConfig = {
+            apiKey: "",
+            authDomain: "",
+            databaseURL: "",
+            projectId: "",
+            storageBucket: "",
+            messagingSenderId: "",
+            appId: "",
+            measurementId: ""
+        };
+        
+        const FIREBASE_NODE_PATH = "/gate_control";
+        
+
+        let db;
+
+        try {
+            const app = firebase.initializeApp(firebaseConfig);
+            db = app.database();
+            console.log("Firebase успішно ініціалізовано.");
+            setupStatusListener();
+        } catch (error) {
+            console.error("Помилка ініціалізації Firebase:", error);
+            document.getElementById('message').textContent = 'error';
+        }
+
+        function sendGateCommand() {
+            if (!db) return;
+
+            const gateRef = db.ref(FIREBASE_NODE_PATH);
+            const commandValue = 1; 
+
+            gateRef.set(commandValue)
+                .then(() => {
+                    const msgElement = document.getElementById('message');
+                    msgElement.textContent = `Команда ${commandValue} успішно відправлена.`;
+                    msgElement.style.color = '#2ecc71';
+                    setTimeout(() => {
+                        gateRef.set(0); 
+                        msgElement.textContent = `Значення скинуто на 0.`;
+                        msgElement.style.color = '#7f8c8d';
+                    }, 2500); // Скидаємо через 1.5 секунди
+                })
+                .catch((error) => {
+                    console.error("Помилка запису в Firebase:", error);
+                    const msgElement = document.getElementById('message');
+                    msgElement.textContent = `Помилка: ${error.message}`;
+                    msgElement.style.color = '#e74c3c';
+                });
+        }
+    </script>
+</body>
+</html>
